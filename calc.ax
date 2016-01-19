@@ -1,0 +1,407 @@
+W 0 NAME: ANSHAY GHOSH     STUDENT NUMBER: 1002019442
+result: F 0.0
+tempval: F 0.0
+char: W 1
+sadd: I 43
+sdiv: I 47
+smult: I 42
+ssub: I 45
+sequal: I 61
+esc: I 27
+decpoint: I 46
+C10: I 10
+C48: I 48
+operatorcounter: I 0
+newline: I 10
+
+decimalcounter: I 0
+decboolean: I 0
+decdivval: I 1
+
+charE: C 'E'
+
+divzero: I 0
+
+C0: I 0
+C1: I 1
+C2: I 2
+C3: I 3
+C4: I 4
+F0: F 0.0
+F1: F 1.0
+
+pitoprint: W 1
+piweight: I 1
+picharminus: C'-'
+pichar0: I 48
+pimask: H 80000000
+piC0: I 0
+piC1: I 1
+piC10: I 10
+
+floattoprint: F 0.0
+intbeforedecimal: I 0
+intafterdecimal: I 0
+charpoint: C '.'
+flweight: I 1
+flmultafterdecimal: I 1
+floatbeforedecimal: F 0.0
+flmultdecimaltemp: F 0.0
+
+main: INP opsys
+   OUT opsys
+   STA char
+
+   W 0 checking if char input is a special character or not
+   XOR sadd
+   BZE addset
+   LDA char
+
+   XOR ssub
+   BZE subset
+   LDA char
+
+   XOR sdiv
+   BZE divset
+   LDA char
+
+   XOR smult
+   BZE multset
+   LDA char
+
+   XOR esc
+   BZE escape
+   LDA char
+
+   XOR decpoint
+   BZE decimalfunc
+   LDA char
+
+   XOR sequal
+   BZE equal
+
+   W 0 if digit char then simply adds it to tempval
+   LDA char
+   SUB C48
+   LDA tempval
+   MUL C10
+   ADD char
+   SUB C48
+   STA tempval
+
+
+   W 0 checks if the decimal has already been inputted and redirects for incrementation
+   LDA decboolean
+   XOR C1
+   BZE decincrement
+
+   BUN main
+
+   W 0 for each of the redirected operator functions, sets the operatorcounter to the corresponding 
+   W 0 operator value
+addset: BSA doarithmetic 
+   LDA C0
+   STA operatorcounter
+   BUN main
+
+divset: BSA doarithmetic
+   LDA C1
+   STA operatorcounter
+   BUN main
+
+subset: BSA doarithmetic
+   LDA C2
+   STA operatorcounter
+   BUN main
+
+multset: BSA doarithmetic
+   LDA C3
+   STA operatorcounter
+   BUN main
+
+   W 0 outputs the right value, and resets all of the others to their original for next iteration
+equal: 
+   BSA doarithmetic
+   LDA divzero
+   XOR C1
+   BZE divzerotrue
+   LDA result
+   BSA printfloat
+   LDA F0
+   STA result
+   STA tempval
+   LDA newline
+   OUT opsys
+   LDA C0
+   STA operatorcounter
+   BUN main
+
+   W 0 exceptional output when there is division by 0 in the equation
+divzerotrue: LDA charE
+   OUT opsys
+   LDA F0
+   STA result
+   STA tempval
+   LDA newline
+   OUT opsys
+   LDA C0
+   STA operatorcounter
+   STA divzero
+   BUN main
+
+
+   W 0 main function where arithmetic is done by using the previous value and previous operator
+   W 0 also calulates the floating point value by dividing with the right power of 10
+   W 0 which is calculated by the number of digits in after the decimal point, using the
+   W 0 exponent function
+doarithmetic: W 1
+   
+   BSA exponent
+   LDA tempval
+   FLD decdivval
+   STA tempval
+   LDA C0
+   STA decimalcounter
+   STA decboolean
+   LDA C1
+   STA decdivval
+   LDA operatorcounter
+   XOR C0
+   BZE add
+   
+   LDA operatorcounter
+   XOR C1
+   BZE div
+   
+   LDA operatorcounter
+   XOR C2
+   BZE sub
+   
+   LDA operatorcounter
+   XOR C3
+   BZE mul
+
+   BIN doarithmetic
+
+   W 0 exponent function description mentioned with doarithmetic
+exponent: W 1
+   LDA decimalcounter
+   XOR C0
+   BZE exponentreturn
+   LDA decdivval
+   MUL C10
+   STA decdivval
+   LDA decimalcounter
+   SUB C1
+   STA decimalcounter
+   BUN exponent
+
+   W 0 to make sure the BSA runs smoothly without breaking the BUN loop in exponent
+exponentreturn: BIN exponent
+
+
+   W 0 each individual function which doarithmetic redirects to based
+   W 0 on the operatorcounter, representing the operation to conduct
+add: LDA result
+   FLA tempval
+   STA result
+   LDA F0
+   STA tempval
+   LDA C10
+   STA operatorcounter
+   BUN doarithmetic
+
+   W 0 does the same as above however, adds the divzero possibility by changing
+   W 0 the divzero value to 1 if division by zero is occuring
+div: LDA tempval
+   XOR C0
+   BZE divzerochange
+   LDA result
+   FLD tempval
+   STA result
+   LDA F0
+   STA tempval
+   LDA C10
+   STA operatorcounter
+   BUN doarithmetic
+
+divzerochange: LDA F1
+   STA tempval
+   LDA C1
+   STA divzero
+   BUN div
+
+sub: LDA result
+   FLS tempval
+   STA result
+   LDA F0
+   STA tempval
+   LDA C10
+   STA operatorcounter
+   BUN doarithmetic
+
+mul: LDA result
+   FLM tempval
+   STA result
+   LDA F0
+   STA tempval
+   LDA C10
+   STA operatorcounter
+   BUN doarithmetic
+
+
+   W 0 for the escape key to work
+escape: BUN opsys
+
+
+   W 0 to change the value of to 1 if a decimal point is inputted in main
+decimalfunc: LDA C1
+   STA decboolean
+   BUN main
+
+
+   W 0 consistently increase the decimal counter for every digit after the decimal point
+decincrement:
+   LDA decimalcounter
+   ADD C1
+   STA decimalcounter
+   BUN main
+
+   W 0 function to print the final float value of result
+   W 0 initially checks if the value is negative and converts it 
+   W 0 to positive and prints a negative sign
+printfloat: W 1
+   STA floattoprint
+   AND pimask
+   BZE positivestep
+   LDA picharminus
+   OUT opsys
+   LDA C0
+   FLS floattoprint
+   STA floattoprint
+   BUN positivestep
+
+   W 0 converts the value to integer and checks if it is rounding up
+   W 0 or rounding down accordingly decrements 
+positivestep:
+   CFI floattoprint
+   STA intbeforedecimal
+   CIF intbeforedecimal
+   STA floatbeforedecimal
+   LDA floattoprint
+   FLS floatbeforedecimal
+   AND pimask
+   BZE printdec
+   LDA intbeforedecimal
+   SUB C1
+   STA intbeforedecimal
+   BUN printdec
+
+   W 0 prints the part before the decimal point and the decimal point itself
+   W 0 seperates the part after the float
+printdec:
+   LDA intbeforedecimal
+   BSA printint
+   LDA charpoint
+   OUT opsys
+   CIF intbeforedecimal
+   STA floatbeforedecimal
+   LDA floattoprint
+   FLS floatbeforedecimal
+   STA floattoprint
+   BUN getweight
+
+   W 0 calculates the number of digits before the decimal
+getweight:
+   LDA intbeforedecimal
+   DIV C10
+   STA intbeforedecimal
+   XOR C0
+   BZE printdec2
+   LDA flweight
+   ADD C1
+   STA flweight
+   BUN getweight
+
+   W 0 uses the weight to print only 4 digits
+printdec2:
+   LDA flweight
+   SUB C4
+   XOR C0
+   BZE printfloatreturn
+   AND pimask
+   BZE printfloatreturn
+   LDA C4
+   SUB flweight
+   STA flweight
+   BSA flexponent
+   CIF flmultafterdecimal
+   STA flmultdecimaltemp
+   LDA floattoprint
+   FLM flmultdecimaltemp
+   STA floattoprint
+   CFI floattoprint
+   STA intafterdecimal
+   BSA printint
+   LDA C0
+   STA intbeforedecimal
+   STA intafterdecimal
+   LDA C1
+   STA flmultafterdecimal
+   STA flweight
+   BUN printfloatreturn
+
+printfloatreturn: BIN printfloat
+   
+   W 0 similar to exponent but for calculating the value with which to multiply
+flexponent: W 1
+   LDA flweight
+   XOR C0
+   BZE flexponentreturn
+   LDA flmultafterdecimal
+   MUL C10
+   STA flmultafterdecimal
+   LDA flweight
+   SUB C1
+   STA flweight
+   BUN flexponent
+
+
+flexponentreturn:
+   BIN flexponent
+
+
+printint: W 1
+   STA pitoprint
+   AND pimask
+   BZE piwhile1
+   LDA picharminus
+   OUT opsys
+   LDA piC0
+   SUB pitoprint
+   STA pitoprint
+piwhile1: LDA pitoprint
+   DIV piweight
+   SUB piC10
+   AND pimask
+   BZE pibody1
+   BUN piwhile2
+pibody1: LDA piweight
+   MUL piC10
+   STA piweight
+   BUN piwhile1
+piwhile2: LDA pitoprint
+   DIV piweight
+   ADD pichar0
+   OUT opsys
+   LDA piweight
+   XOR piC1
+   BZE pireturn
+   LDA pitoprint
+   MOD piweight
+   STA pitoprint
+   LDA piweight
+   DIV piC10
+   STA piweight
+   BUN piwhile2
+pireturn: BIN printint
